@@ -1,7 +1,6 @@
 CC=i686-elf-gcc
 AS=i686-elf-as
 
-
 ifeq (, $(shell which $(CC) 2> /dev/null))
 $(error "No i686-elf-gcc in PATH")
 endif
@@ -11,9 +10,9 @@ $(error "No i686-elf-as in PATH")
 endif
 
 C_COMPILE_FLAGS=-g -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-C_LINK_FLAGS=-T linker.ld -ffreestanding -O2 -nostdlib -lgcc
+C_LINK_FLAGS=-T src/linker.ld -ffreestanding -O2 -nostdlib -lgcc
 
-SRCDIR=.
+SRCDIR=./src
 
 C_FILES = $(foreach D, $(SRCDIR), $(wildcard $(D)/*.c))
 S_FILES = $(foreach D, $(SRCDIR), $(wildcard $(D)/*.s))
@@ -24,7 +23,7 @@ S_OBJFILES = $(patsubst %.s, %.s.o, $(S_FILES))
 BINARY = bare_bones.bin
 
 all: $(BINARY)
-	$(info Discovered S sources: $(S_FILES))
+	$(info Discovered ASM sources: $(S_FILES))
 	$(info Discovered C sources: $(C_FILES))
 
 $(BINARY): $(C_OBJFILES) $(S_OBJFILES)
@@ -37,5 +36,5 @@ $(BINARY): $(C_OBJFILES) $(S_OBJFILES)
 	$(AS) $^ -o $@
 
 clean:
-	$(info Removing $(C_OBJFILES) $(S_OBJFILES))
+	$(info Removing $(C_OBJFILES) $(S_OBJFILES) $(BINARY))
 	@rm $(C_OBJFILES) $(S_OBJFILES) $(BINARY)
