@@ -3,13 +3,20 @@
 
 #define GDT_SIZE 5
 
-struct gdt_entry {
-
+struct gdt_entry_unencoded {
   uint32_t base;
-  uint32_t limit;  
+  uint32_t limit;
   uint8_t access_byte;
   uint8_t flags;
+};
 
+struct gdt_entry {
+  uint16_t low_limit;
+  uint16_t low_base;  
+  uint8_t mid_base;
+  uint8_t access_byte;
+  uint8_t limit_and_flags;
+  uint8_t high_base;
 } __attribute__((packed));
 
 struct gdt_ptr {
@@ -17,42 +24,44 @@ struct gdt_ptr {
   uint32_t base;
 } __attribute__((packed));
 
-// probably better to make a struct that is exactly 8 bytes
-// is more readable
-uint64_t gdt[GDT_SIZE];
+struct gdt_entry gdt[GDT_SIZE];
 struct gdt_ptr gdt_info;
 
-void encode_gdt_entry(uint8_t* target, struct gdt_entry entry) {
+struct gdt_entry encode_gdt_entry(struct gdt_entry_unencoded raw_entry) { 
 
-  if (entry.limit > 0xFFFFF) {
-    return;
-  }
+  struct gdt_entry entry;
 
   // limit
-  target[0] = entry.limit & 0xFF;
-  target[1] = (entry.limit >> 8) & 0xFF;
-  target[6] = (entry.limit >> 16) & 0x0F;
+  entry.low_limit = raw_entry.limit & 0xFFFF;
+  entry.limit_and_flags = (raw_entry.limit >> 16) & 0x0F;
 
   // base
-  target[2] = entry.base & 0xFF;
-  target[3] = (entry.base >> 8) & 0xFF;
-  target[4] = (entry.base >> 16) & 0xFF;
-  target[7] = (entry.base >> 24) & 0xFF;
+  entry.low_base = raw_entry.base & 0xFFFF;
+  entry.mid_base = (raw_entry.base >> 16) & 0xFF;
+  entry.high_base = (raw_entry.base >> 24) & 0xFF;
 
-  // access byte
-  target[5] = entry.access_byte;
+  // access_byte
+  entry.access_byte = raw_entry.access_byte;
   
   // flags
-  target[6] |= (entry.flags << 4);
+  entry.limit_and_flags |= (raw_entry.flags & 0x0F) << 4;
+
+  return entry;
 }
 
-void create_gdt_entry(uint32_t entry_num, 
+void create_gdt_entry(size_t entry_num,
                       uint32_t base,
                       uint32_t limit,
                       uint8_t access_byte,
-                      uint8_t flags) { 
-  struct gdt_entry entry = {base, limit, access_byte, flags};
-  encode_gdt_entry((uint8_t*)(gdt + entry_num), entry);
+                      uint8_t flags) {
+
+  if (limit > 0xFFFFF) {
+    return;
+  }
+
+  struct gdt_entry_unencoded raw_gdt_entry = {base, limit, access_byte, flags};
+
+  gdt[entry_num] = encode_gdt_entry(raw_gdt_entry);
 }
 
 void gdt_init(void) {
@@ -69,7 +78,6 @@ void gdt_init(void) {
 
   // possibly task state segment (TSS)
 
-  // is this cast safe ?
   gdt_info.limit = GDT_SIZE * sizeof(struct gdt_entry) - 1;
-  gdt_info.base = (uint32_t)gdt;
+  gdt_info.base = (uint32_t)&gdt;
 }
