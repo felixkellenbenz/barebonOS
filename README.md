@@ -1,4 +1,4 @@
-### barebonOS
+# barebonOS
 
 This is a very (very very) bare bones OS which can do nothing except printing to the Screen.
 It is mostly based on the awesome Tutorial https://wiki.osdev.org/Bare_Bones. Also this 
