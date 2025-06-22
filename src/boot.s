@@ -1,14 +1,32 @@
-.set ALIGN,    1<<0             
-.set MEMINFO,  1<<1              
-.set FLAGS,    ALIGN | MEMINFO  
-.set MAGIC,    0x1BADB002        
-.set CHECKSUM, -(MAGIC + FLAGS) 
+.set AARCH,    0
+.set HEAD_LEN, multiboot_end - multiboot_start
+.set MAGIC,    0xE85250D6     
+.set CHECKSUM, -(MAGIC + AARCH + HEAD_LEN) 
+
 
 .section .multiboot
-.align 4
+.align 8   // multiboot header so 8 Byte alignment
+multiboot_start:
 .long MAGIC
-.long FLAGS
+.long AARCH
+.long HEAD_LEN
 .long CHECKSUM
+
+.align 8    // this is a tag so 8 Byte alignment
+framebuffer_tag_start:
+.short 5    // tag type 5 = framebuffer
+.short 1    // flag so that the bootloader does not ignore this tag
+.long framebuffer_tag_end - framebuffer_tag_start
+.long 1024  // width of the frambuffer
+.long 768   // height of the framebuffer
+.long 32    // depth i.e how many bytes per pixel
+framebuffer_tag_end:
+
+.align 8    // this is a tag so 8 Byte alignment
+.short 0    // each tags are terminated 
+.short 0    // with a tag of type 0 and length 8
+.long 8
+multiboot_end:
 
 .section .bss
 .align 16
