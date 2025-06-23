@@ -10,11 +10,12 @@ $(error "No i686-elf-as in PATH")
 endif
 
 SRCDIR=./src
+INCLUDEDIR=./include
 BUILDDIR=./build
 LNK_FILE=./src/linker.ld
 ISODIR=./isodir
 
-C_COMPILE_FLAGS=-g -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+C_COMPILE_FLAGS=-g -std=gnu99 $(foreach D, $(INCLUDEDIR), -I$(D)) -ffreestanding -O2 -Wall -Wextra -MP -MD
 C_LINK_FLAGS=-T $(LNK_FILE) -ffreestanding -O2 -nostdlib -lgcc
 
 C_FILES = $(foreach D, $(SRCDIR), $(wildcard $(D)/*.c))
@@ -22,6 +23,8 @@ S_FILES = $(foreach D, $(SRCDIR), $(wildcard $(D)/*.s))
 
 C_OBJFILES = $(patsubst %.c, $(BUILDDIR)/%.c.o, $(C_FILES))
 S_OBJFILES = $(patsubst %.s, $(BUILDDIR)/%.s.o, $(S_FILES))
+
+DEP_FILES = $(patsubst %.c, $(BUILDDIR)/%.c.d, $(C_FILES)) $(patsubst %.s, $(BUILDDIR)/%.s.d, $(S_FILES)) 
 
 OS_NAME = bare_bones
 BINARY = $(OS_NAME).bin
