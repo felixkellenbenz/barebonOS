@@ -41,21 +41,6 @@ _start:
 
 	mov $stack_top, %esp
 
-  # load gdt, see gdt.c for gdt_init()
-  call gdt_init
-  lgdt [gdt_info]
-
-  # populate segment registers
-  mov $0x10, %eax
-  mov %ax, %ds
-  mov %ax, %es
-  mov %ax, %fs 
-  mov %ax, %gs
-  mov %ax, %ss
-  jmp $0x08, $set_code_segment
-
-set_code_segment:
-
 	call kernel_main
 
 	cli

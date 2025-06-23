@@ -1,6 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "gdt.h"
+
+extern void gdt_flush(uint32_t gdt_info_addr);
+
 #define GDT_SIZE 5
 
 struct gdt_entry_unencoded {
@@ -80,4 +84,6 @@ void gdt_init(void) {
 
   gdt_info.limit = GDT_SIZE * sizeof(struct gdt_entry) - 1;
   gdt_info.base = (uint32_t)&gdt;
+
+  gdt_flush((uint32_t)&gdt_info);
 }
