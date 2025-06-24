@@ -41,6 +41,11 @@ _start:
 
 	mov $stack_top, %esp
 
+  pushl $0
+  pushl $0
+  pushl %ebx
+  pushl %eax 
+
 	call kernel_main
 
 	cli

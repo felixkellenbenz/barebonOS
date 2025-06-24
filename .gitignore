@@ -4,4 +4,6 @@ build/
 TODO
 *.iso
 isodir/
+.cache/
+*.json
 
