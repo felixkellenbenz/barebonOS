@@ -1,7 +1,7 @@
 #include <stddef.h>
 
 
-#include "boot/multiboot.h"
+#include "multiboot.h"
 
 static uint32_t mbi_magic;
 static uint32_t mbi_addr;
@@ -11,6 +11,7 @@ void setup_bootinfo_parsing(uint32_t magic, uint32_t addr) {
   mbi_addr = addr;
 }
 
+// Should we parse this properly ?
 struct framebuffer_info find_framebuffer() {
 
   struct multiboot_tag* tag;  

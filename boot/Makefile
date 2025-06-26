@@ -5,8 +5,9 @@ SRC_DIRS=./
 INCLUDE_DIRS=./../include/
 BUILD_DIR=./../build/
 
+DEBUG=-g
 OPTIMIZATION=-O2
-CC_COMPILE_FLAGS=-std=gnu99 $(foreach D, $(INCLUDE_DIRS), -I$(D)) -ffreestanding $(OPTIMIZATION) -Wall -Wextra -MP -MD
+CC_COMPILE_FLAGS=$(DEBUG) -std=gnu99 $(foreach D, $(INCLUDE_DIRS), -I$(D)) -ffreestanding $(OPTIMIZATION) -Wall -Wextra -MP -MD
 
 PREFIX=./boot/
 
@@ -23,7 +24,7 @@ all: $(C_OBJFILES) $(S_OBJFILES)
 	$(info $(S_OBJFILES))
 
 $(BUILD_DIR)$(PREFIX)%.s.o: %.s create_build_dirs
-	$(AS) -c $< -o $@
+	$(AS) $(DEBUG) -c $< -o $@
 
 $(BUILD_DIR)$(PREFIX)%.c.o: %.c create_build_dirs
 	$(CC) $(CC_COMPILE_FLAGS) -c $< -o $@ 
