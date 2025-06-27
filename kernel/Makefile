@@ -2,7 +2,7 @@ CC=i686-elf-gcc
 AS=i686-elf-as
 OBJCOPY=i686-elf-objcopy
 
-SRC_DIRS=./ ./gdt/ ./font/
+SRC_DIRS=./ ./gdt/ ./tty/
 INCLUDE_DIRS=./../include/
 BUILD_DIR=./../build/
 

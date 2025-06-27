@@ -49,4 +49,3 @@ struct framebuffer_info find_framebuffer() {
 
   return framebuf_info;
 }
-
