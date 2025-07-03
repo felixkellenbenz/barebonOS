@@ -1,8 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "gdt/gdt.h"
-
 extern void gdt_flush(uint32_t gdt_info_addr);
 
 #define GDT_SIZE 5

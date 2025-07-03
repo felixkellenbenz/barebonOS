@@ -30,6 +30,4 @@ void terminal_writestring(const char* s, size_t len);
 
 void terminal_writestring_pretty(const char* s, size_t len,
                                  uint32_t fg, uint32_t bg);
-
-
 #endif

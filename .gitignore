@@ -1,9 +1,7 @@
-*.o
-*.bin
-build/
 TODO
-*.iso
-isodir/
-.cache/
+
 *.json
 
+sysroot/
+
+.cache

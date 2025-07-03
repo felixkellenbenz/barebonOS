@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#include "multiboot.h"
-
 #define PSF_FONT_MAGIC    0x864ab572
 
 struct psf_font {

@@ -1,39 +1,74 @@
-CC=i686-elf-gcc
-AS=i686-elf-as
-OBJCOPY=i686-elf-objcopy
+DEFAULT_HOST!=../default-host.sh
+HOST?=$(DEFAULT_HOST)
+HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
-SRC_DIRS=./ ./gdt/ ./tty/
-INCLUDE_DIRS=./../include/
-BUILD_DIR=./../build/
+CFLAGS?=-O2 -g
+CPPFLAGS?=
+LDFLAGS?=
+LIBS?=
 
-DEBUG=-g
-OPTIMIZATION=-O2
-CC_COMPILE_FLAGS=$(DEBUG) -std=gnu99 $(foreach D, $(INCLUDE_DIRS), -I$(D)) -ffreestanding $(OPTIMIZATION) -Wall -Wextra -MP -MD
+DESTDIR?=
+PREFIX?=/usr/local
+EXEC_PREFIX?=$(PREFIX)
+BOOTDIR?=$(EXEC_PREFIX)/boot
+INCLUDEDIR?=$(PREFIX)/include
 
-PREFIX=./kernel/
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
+CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
+LDFLAGS:=$(LDFLAGS)
+LIBS:=$(LIBS) -nostdlib -lgcc
 
-C_FILES=$(foreach DIR, $(SRC_DIRS), $(wildcard $(DIR)*.c))
-S_FILES=$(foreach DIR, $(SRC_DIRS), $(wildcard $(DIR)*.s))
-PSF_FILES=$(foreach DIR, $(SRC_DIRS), $(wildcard $(DIR)*.psf))
+ARCHDIR=arch/$(HOSTARCH)
 
-C_OBJFILES=$(patsubst %.c, $(BUILD_DIR)$(PREFIX)%.c.o, $(C_FILES))
-S_OBJFILES=$(patsubst %.s, $(BUILD_DIR)$(PREFIX)%.s.o, $(S_FILES))
-PSF_OBJFILES=$(patsubst %.psf, $(BUILD_DIR)$(PREFIX)%.psf.o, $(PSF_FILES))
+include $(ARCHDIR)/make.config
 
-DEP_FILES = $(patsubst %.c, $(BUILDDIR)$(PREFIX)%.c.d, $(C_FILES)) $(patsubst %.s, $(BUILDDIR)$(PREFIX)%.s.d, $(S_FILES)) 
+CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
+CPPFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CPPFLAGS)
+LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
+LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
-.PHONY: all create_build_dirs
-all: $(C_OBJFILES) $(S_OBJFILES) $(PSF_OBJFILES)
+KERNEL_OBJS= 									\
+$(KERNEL_ARCH_OBJS) 					\
+kernel/kernel.o								\
+kernel/multiboot.o						\
+kernel/psf.o									\
+kernel/terminal.o							\
+kernel/font/psf/psflat9-16.o	\
 
-$(BUILD_DIR)$(PREFIX)%.s.o: %.s create_build_dirs
-	$(AS) -c $< -o $@
+LINK_LIST= 					\
+$(LDFLAGS)					\
+$(KERNEL_OBJS)			\
+$(LIBS)							\
 
-$(BUILD_DIR)$(PREFIX)%.c.o: %.c create_build_dirs
-	$(CC) $(CC_COMPILE_FLAGS) -c $< -o $@ 
+.PHONY: all clean install intall-headers install-kernel
 
-$(BUILD_DIR)$(PREFIX)%.psf.o: %.psf create_build_dirs
-	$(OBJCOPY) -O elf32-i386 -B i386 -I binary $< $@
+all: bbOS.kernel
 
-create_build_dirs:
-	$(foreach DIR, $(SRC_DIRS), $(shell mkdir -p $(BUILD_DIR)$(PREFIX)$(DIR))) 
+bbOS.kernel: $(KERNEL_OBJS) $(ARCHDIR)/linker.ld
+	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
+	grub2-file --is-x86-multiboot2 bbOS.kernel
+
+%.o: %.c
+	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+
+%.o: %.s
+	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+
+%.o: %.psf
+	objcopy -O elf32-i386 -B i386 -I binary $< $@
+
+clean:
+	rm -f bbOS.kernel
+	rm -f $(OBJS) *.o */*.o */*/*.o
+	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+
+install: install-headers install-kernel
+
+install-headers:
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
+
+install-kernel: bbOS.kernel
+	mkdir -p $(DESTDIR)$(BOOTDIR)
+	cp bbOS.kernel $(DESTDIR)$(BOOTDIR)
 
