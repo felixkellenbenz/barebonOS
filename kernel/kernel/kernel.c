@@ -33,12 +33,11 @@ void kernel_main(uint32_t magic, uint32_t addr) {
   setup_bootinfo_parsing(magic, addr);
 
   // could this also be in terminal init ?
-  fb_info = find_framebuffer().common_info;
-  struct psf_font font_info = get_psf_info();
-  
-  size_t width = fb_info.fb_width / font_info.width;
-  size_t height = fb_info.fb_height / font_info.heigth;
-  terminal_init(psf_putchar_at, 0x00FFFFFF, 0, width, height);
+  struct framebuffer_info_common fb_info = find_framebuffer().common_info;
+  psf_init(multiboot2_to_display_info(fb_info));
+  terminal_init(psf_putchar_at, 0x00FFFFFF, 0,
+                get_term_width_chars(fb_info.fb_width),
+                get_term_heigth_chars(fb_info.fb_height));
   gdt_init();
 
   char* str = "AAAAAAAAAA";
